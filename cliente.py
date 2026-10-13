@@ -1,4 +1,9 @@
 """Cliente de consola para la API de tareas (requiere: pip install requests)."""
+import os
+import re
+import tempfile
+import webbrowser
+
 import requests
 
 URL = "http://127.0.0.1:5000"
@@ -13,7 +18,23 @@ def mostrar(resp):
     try:
         print(f"[{resp.status_code}]", resp.json())
     except ValueError:
-        print(f"[{resp.status_code}]\n{resp.text}")
+        mostrar_html(resp)
+
+
+def mostrar_html(resp):
+    """La terminal no interpreta HTML: se muestra el texto limpio y la página se abre en el navegador."""
+    html = resp.text
+    texto = re.sub(r"<(style|script).*?</\1>", "", html, flags=re.S)  # saca CSS y scripts
+    texto = re.sub(r"<[^>]+>", " ", texto)                            # saca las etiquetas
+    texto = re.sub(r"\s+", " ", texto).strip()
+    print(f"[{resp.status_code}] {texto}")
+
+    # Se guarda en un archivo temporal y se abre en el navegador para verla con su diseño
+    ruta = os.path.join(tempfile.gettempdir(), "bienvenida_tareas.html")
+    with open(ruta, "w", encoding="utf-8") as f:
+        f.write(html)
+    webbrowser.open("file://" + ruta)
+    print("(Se abrió la página de bienvenida en tu navegador)")
 
 
 def main():
