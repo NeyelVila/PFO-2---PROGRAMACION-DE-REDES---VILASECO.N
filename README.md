@@ -81,3 +81,9 @@ GitHub Pages solo sirve sitios **estáticos**, por lo que no puede ejecutar Flas
 - **SQL estándar y transacciones ACID**, con restricciones como `UNIQUE` para evitar usuarios duplicados.
 - **Ideal para prototipos y proyectos pequeños** con pocos usuarios concurrentes.
 - _Limitación:_ para muchos accesos simultáneos de escritura conviene migrar a PostgreSQL/MySQL.
+
+## **👨‍🎓Estudiante**
+[<img src="https://avatars.githubusercontent.com/u/95725306?v=4" width="115"><br><sub>Neyel Vilaseco</sub><br><sub>neyelvilaseco@gmail.com</sub>](https://github.com/NeyelVila)
+
+## Licencia
+Proyecto con fines educativos (PFO2).
