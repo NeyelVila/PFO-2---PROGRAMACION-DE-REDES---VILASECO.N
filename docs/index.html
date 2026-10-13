@@ -1,287 +1,623 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PFO 2 – Sistema de Gestión de Tareas</title>
-  <style>
-    :root {
-      --bg: #f5f7fa; --card: #ffffff; --text: #1f2933; --muted: #5f6b7a;
-      --accent: #2563eb; --border: #e3e8ef; --code-bg: #0f172a; --code-text: #e2e8f0;
-      --ok: #16a34a; --warn: #d97706; --err: #dc2626;
-    }
-    @media (prefers-color-scheme: dark) {
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PFO 2 – Sistema de Gestión de Tareas</title>
+    <style>
       :root {
-        --bg: #0b1220; --card: #131c2e; --text: #e6ebf2; --muted: #9aa7b8;
-        --accent: #6ea0ff; --border: #24314a; --code-bg: #060b16; --code-text: #e2e8f0;
+        --bg: #f5f7fa;
+        --card: #ffffff;
+        --text: #1f2933;
+        --muted: #5f6b7a;
+        --accent: #2563eb;
+        --border: #e3e8ef;
+        --code-bg: #0f172a;
+        --code-text: #e2e8f0;
+        --ok: #16a34a;
+        --warn: #d97706;
+        --err: #dc2626;
       }
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; background: var(--bg); color: var(--text);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.6;
-    }
-    header {
-      background: linear-gradient(135deg, #1e3a8a, #2563eb); color: #fff;
-      padding: 3rem 1.25rem 2.5rem; text-align: center;
-    }
-    header h1 { margin: 0 0 .5rem; font-size: clamp(1.6rem, 4vw, 2.4rem); }
-    header p { margin: 0; opacity: .9; }
-    .badges { margin-top: 1rem; display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; }
-    .badge { background: rgba(255,255,255,.18); padding: .25rem .75rem; border-radius: 999px; font-size: .85rem; }
-    nav {
-      position: sticky; top: 0; z-index: 10; background: var(--card);
-      border-bottom: 1px solid var(--border); display: flex; gap: 1.25rem;
-      justify-content: center; flex-wrap: wrap; padding: .75rem 1rem;
-    }
-    nav a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: .95rem; }
-    nav a:hover { text-decoration: underline; }
-    main { max-width: 900px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
-    section {
-      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-      padding: 1.5rem; margin-bottom: 1.5rem;
-    }
-    h2 { margin-top: 0; color: var(--accent); }
-    h3 { margin-bottom: .25rem; }
-    pre {
-      background: var(--code-bg); color: var(--code-text); padding: 1rem;
-      border-radius: 8px; overflow-x: auto; font-size: .88rem;
-    }
-    code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; }
-    p code, li code, td code { background: var(--bg); padding: .1rem .35rem; border-radius: 4px; font-size: .9em; }
-    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-    th, td { text-align: left; padding: .6rem .75rem; border-bottom: 1px solid var(--border); }
-    th { color: var(--muted); font-weight: 600; }
-    .method { font-weight: 700; font-family: ui-monospace, Consolas, monospace; }
-    .get { color: var(--ok); } .post { color: var(--warn); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
-    figure { margin: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--bg); }
-    figure img { width: 100%; display: block; cursor: zoom-in; transition: opacity .15s; }
-    figure img:hover { opacity: .85; }
-    .lightbox {
-      position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.88);
-      display: none; align-items: center; justify-content: center;
-      flex-direction: column; padding: 1rem; cursor: zoom-out;
-    }
-    .lightbox.open { display: flex; }
-    .lightbox img { max-width: 96vw; max-height: 86vh; object-fit: contain; border-radius: 6px; background: #fff; }
-    .lightbox p { color: #fff; margin: .75rem 0 0; font-size: .95rem; text-align: center; }
-    .lightbox .close {
-      position: absolute; top: .75rem; right: 1rem; color: #fff; font-size: 2rem;
-      line-height: 1; background: none; border: 0; cursor: pointer;
-    }
-    .lightbox .nav {
-      position: absolute; top: 50%; transform: translateY(-50%); color: #fff; font-size: 2.5rem;
-      background: rgba(255,255,255,.12); border: 0; border-radius: 8px; cursor: pointer;
-      padding: .25rem .8rem;
-    }
-    .lightbox .prev { left: .75rem; } .lightbox .next { right: .75rem; }
-    .lightbox .nav:hover, .lightbox .close:hover { background: rgba(255,255,255,.25); }
-    figcaption { padding: .6rem .8rem; font-size: .9rem; color: var(--muted); }
-    figcaption strong { color: var(--text); }
-    .missing { padding: 2.5rem 1rem; text-align: center; color: var(--muted); font-size: .85rem; }
-    .note {
-      border-left: 4px solid var(--warn); background: var(--bg);
-      padding: .75rem 1rem; border-radius: 0 8px 8px 0; margin-top: 1rem; font-size: .95rem;
-    }
-    ul { padding-left: 1.2rem; }
-    footer { text-align: center; color: var(--muted); font-size: .85rem; padding-bottom: 2rem; }
-  </style>
-</head>
-<body>
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1220;
+          --card: #131c2e;
+          --text: #e6ebf2;
+          --muted: #9aa7b8;
+          --accent: #6ea0ff;
+          --border: #24314a;
+          --code-bg: #060b16;
+          --code-text: #e2e8f0;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        line-height: 1.6;
+      }
+      header {
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        color: #fff;
+        padding: 3rem 1.25rem 2.5rem;
+        text-align: center;
+      }
+      header h1 {
+        margin: 0 0 0.5rem;
+        font-size: clamp(1.6rem, 4vw, 2.4rem);
+      }
+      header p {
+        margin: 0;
+        opacity: 0.9;
+      }
+      .badges {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .badge {
+        background: rgba(255, 255, 255, 0.18);
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.85rem;
+      }
+      nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        gap: 1.25rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        padding: 0.75rem 1rem;
+      }
+      nav a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+      nav a:hover {
+        text-decoration: underline;
+      }
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 1.5rem 1.25rem 3rem;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      h2 {
+        margin-top: 0;
+        color: var(--accent);
+      }
+      h3 {
+        margin-bottom: 0.25rem;
+      }
+      pre {
+        background: var(--code-bg);
+        color: var(--code-text);
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.88rem;
+      }
+      code {
+        font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      }
+      p code,
+      li code,
+      td code {
+        background: var(--bg);
+        padding: 0.1rem 0.35rem;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .method {
+        font-weight: 700;
+        font-family: ui-monospace, Consolas, monospace;
+      }
+      .get {
+        color: var(--ok);
+      }
+      .post {
+        color: var(--warn);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1rem;
+      }
+      figure {
+        margin: 0;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        background: var(--bg);
+      }
+      figure img {
+        width: 100%;
+        display: block;
+        cursor: zoom-in;
+        transition: opacity 0.15s;
+      }
+      figure img:hover {
+        opacity: 0.85;
+      }
+      .lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.88);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        padding: 1rem;
+        cursor: zoom-out;
+      }
+      .lightbox.open {
+        display: flex;
+      }
+      .lightbox img {
+        max-width: 96vw;
+        max-height: 86vh;
+        object-fit: contain;
+        border-radius: 6px;
+        background: #fff;
+      }
+      .lightbox p {
+        color: #fff;
+        margin: 0.75rem 0 0;
+        font-size: 0.95rem;
+        text-align: center;
+      }
+      .lightbox .close {
+        position: absolute;
+        top: 0.75rem;
+        right: 1rem;
+        color: #fff;
+        font-size: 2rem;
+        line-height: 1;
+        background: none;
+        border: 0;
+        cursor: pointer;
+      }
+      .lightbox .nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #fff;
+        font-size: 2.5rem;
+        background: rgba(255, 255, 255, 0.12);
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        padding: 0.25rem 0.8rem;
+      }
+      .lightbox .prev {
+        left: 0.75rem;
+      }
+      .lightbox .next {
+        right: 0.75rem;
+      }
+      .lightbox .nav:hover,
+      .lightbox .close:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+      figcaption {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+      figcaption strong {
+        color: var(--text);
+      }
+      .missing {
+        padding: 2.5rem 1rem;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+      .note {
+        border-left: 4px solid var(--warn);
+        background: var(--bg);
+        padding: 0.75rem 1rem;
+        border-radius: 0 8px 8px 0;
+        margin-top: 1rem;
+        font-size: 0.95rem;
+      }
+      ul {
+        padding-left: 1.2rem;
+      }
+      footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+        padding-bottom: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Sistema de Gestión de Tareas</h1>
+      <p>PFO 2 – API REST con Flask y SQLite</p>
+      <div class="badges">
+        <span class="badge">Python</span>
+        <span class="badge">Flask</span>
+        <span class="badge">SQLite</span>
+        <span class="badge">Contraseñas hasheadas</span>
+      </div>
+    </header>
 
-<header>
-  <h1>Sistema de Gestión de Tareas</h1>
-  <p>PFO 2 – API REST con Flask y SQLite</p>
-  <div class="badges">
-    <span class="badge">Python</span>
-    <span class="badge">Flask</span>
-    <span class="badge">SQLite</span>
-    <span class="badge">Contraseñas hasheadas</span>
-  </div>
-</header>
+    <nav>
+      <a href="#proyecto">Proyecto</a>
+      <a href="#ejecucion">Ejecución</a>
+      <a href="#endpoints">Endpoints</a>
+      <a href="#capturas">Capturas</a>
+      <a href="#conceptos">Conceptos</a>
+    </nav>
 
-<nav>
-  <a href="#proyecto">Proyecto</a>
-  <a href="#ejecucion">Ejecución</a>
-  <a href="#endpoints">Endpoints</a>
-  <a href="#capturas">Capturas</a>
-  <a href="#conceptos">Conceptos</a>
-</nav>
+    <main>
+      <section id="proyecto">
+        <h2>Sobre el proyecto</h2>
+        <p>
+          API REST desarrollada con Flask que permite registrar usuarios,
+          iniciar sesión y acceder a la sección de tareas. Los datos se guardan
+          en SQLite y las contraseñas se almacenan hasheadas (nunca en texto
+          plano). Incluye un cliente de consola para interactuar con la API.
+        </p>
+        <ul>
+          <li><code>servidor.py</code>: API Flask + SQLite.</li>
+          <li><code>cliente.py</code>: cliente de consola.</li>
+          <li><code>README.md</code>: documentación en el repositorio.</li>
+        </ul>
+        <div class="note">
+          GitHub Pages solo aloja sitios estáticos y no puede ejecutar Flask.
+          Esta página documenta el proyecto; la API se ejecuta de forma local.
+        </div>
+      </section>
 
-<main>
-
-  <section id="proyecto">
-    <h2>Sobre el proyecto</h2>
-    <p>
-      API REST desarrollada con Flask que permite registrar usuarios, iniciar sesión y acceder a la
-      sección de tareas. Los datos se guardan en SQLite y las contraseñas se almacenan hasheadas
-      (nunca en texto plano). Incluye un cliente de consola para interactuar con la API.
-    </p>
-    <ul>
-      <li><code>servidor.py</code>: API Flask + SQLite.</li>
-      <li><code>cliente.py</code>: cliente de consola.</li>
-      <li><code>README.md</code>: documentación en el repositorio.</li>
-    </ul>
-    <div class="note">
-      GitHub Pages solo aloja sitios estáticos y no puede ejecutar Flask.
-      Esta página documenta el proyecto; la API se ejecuta de forma local.
-    </div>
-  </section>
-
-  <section id="ejecucion">
-    <h2>Cómo ejecutarlo</h2>
-    <h3>1. Clonar e instalar</h3>
-    <pre><code>git clone https://github.com/TU-USUARIO/TU-REPO.git
-cd TU-REPO
+      <section id="ejecucion">
+        <h2>Cómo ejecutarlo</h2>
+        <h3>1. Clonar e instalar</h3>
+        <pre><code>git clone https://github.com/NeyelVila/PFO-2---PROGRAMACION-DE-REDES---VILASECO.N.git
+cd PFO-2---PROGRAMACION-DE-REDES---VILASECO.N
 python -m venv venv
-venv\Scripts\activate        # Linux/Mac: source venv/bin/activate
-pip install -r requirements.txt</code></pre>
-    <h3>2. Iniciar el servidor</h3>
-    <pre><code>python servidor.py</code></pre>
-    <p>Queda disponible en <code>http://127.0.0.1:5000</code>. La base <code>tareas.db</code> se crea automáticamente.</p>
-    <h3>3. Usar el cliente (en otra terminal)</h3>
-    <pre><code>python cliente.py</code></pre>
-  </section>
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python servidor.py</code></pre>
+        <h3>2. Iniciar el servidor</h3>
+        <pre><code>python servidor.py</code></pre>
+        <p>
+          Queda disponible en <code>http://127.0.0.1:5000</code>. La base
+          <code>tareas.db</code> se crea automáticamente.
+        </p>
+        <h3>3. Usar el cliente (en otra terminal)</h3>
+        <pre><code>python cliente.py</code></pre>
+      </section>
 
-  <section id="endpoints">
-    <h2>Endpoints</h2>
-    <table>
-      <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Códigos</th></tr></thead>
-      <tbody>
-        <tr><td class="method post">POST</td><td><code>/registro</code></td><td>Crea un usuario con contraseña hasheada</td><td>201, 400, 409</td></tr>
-        <tr><td class="method post">POST</td><td><code>/login</code></td><td>Verifica credenciales e inicia sesión</td><td>200, 400, 401</td></tr>
-        <tr><td class="method get">GET</td><td><code>/tareas</code></td><td>HTML de bienvenida (requiere login)</td><td>200, 401</td></tr>
-      </tbody>
-    </table>
-    <h3>Cuerpo JSON de /registro y /login</h3>
-    <pre><code>{"usuario": "nombre", "contraseña": "1234"}</code></pre>
-  </section>
+      <section id="endpoints">
+        <h2>Endpoints</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Método</th>
+              <th>Ruta</th>
+              <th>Descripción</th>
+              <th>Códigos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="method post">POST</td>
+              <td><code>/registro</code></td>
+              <td>Crea un usuario con contraseña hasheada</td>
+              <td>201, 400, 409</td>
+            </tr>
+            <tr>
+              <td class="method post">POST</td>
+              <td><code>/login</code></td>
+              <td>Verifica credenciales e inicia sesión</td>
+              <td>200, 400, 401</td>
+            </tr>
+            <tr>
+              <td class="method get">GET</td>
+              <td><code>/tareas</code></td>
+              <td>HTML de bienvenida (requiere login)</td>
+              <td>200, 401</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Cuerpo JSON de /registro y /login</h3>
+        <pre><code>{"usuario": "nombre", "contraseña": "1234"}</code></pre>
+      </section>
 
-  <section id="capturas">
-    <h2>Capturas de pruebas</h2>
-    <p>Las imágenes se cargan desde la carpeta <code>capturas/</code> (junto a este archivo).</p>
-    <div class="grid">
+      <section id="capturas">
+        <h2>Capturas de pruebas</h2>
+        <p>
+          Las imágenes se cargan desde la carpeta <code>capturas/</code> (junto
+          a este archivo).
+        </p>
+        <div class="grid">
+          <figure>
+            <img
+              src="capturas/01-registro.png"
+              alt="Registro exitoso"
+              onerror="
+                this.outerHTML =
+                  '<div class=missing>Falta capturas/01-registro.png</div>'
+              "
+            />
+            <figcaption>
+              <strong>1. Registro exitoso</strong> – respuesta 201
+            </figcaption>
+          </figure>
 
-      <figure>
-        <img src="capturas/01-registro.png" alt="Registro exitoso" onerror="this.outerHTML='<div class=missing>Falta capturas/01-registro.png</div>'">
-        <figcaption><strong>1. Registro exitoso</strong> – respuesta 201</figcaption>
-      </figure>
+          <figure>
+            <img
+              src="capturas/02-registro-duplicado.png"
+              alt="Registro duplicado"
+              onerror="
+                this.outerHTML =
+                  '<div class=missing>Falta capturas/02-registro-duplicado.png</div>'
+              "
+            />
+            <figcaption>
+              <strong>2. Usuario duplicado</strong> – respuesta 409
+            </figcaption>
+          </figure>
 
-      <figure>
-        <img src="capturas/02-registro-duplicado.png" alt="Registro duplicado" onerror="this.outerHTML='<div class=missing>Falta capturas/02-registro-duplicado.png</div>'">
-        <figcaption><strong>2. Usuario duplicado</strong> – respuesta 409</figcaption>
-      </figure>
+          <figure>
+            <img
+              src="capturas/03-tareas-sin-login.png"
+              alt="Tareas sin login"
+              onerror="
+                this.outerHTML =
+                  '<div class=missing>Falta capturas/03-tareas-sin-login.png</div>'
+              "
+            />
+            <figcaption>
+              <strong>3. /tareas sin sesión</strong> – respuesta 401
+            </figcaption>
+          </figure>
 
-      <figure>
-        <img src="capturas/03-tareas-sin-login.png" alt="Tareas sin login" onerror="this.outerHTML='<div class=missing>Falta capturas/03-tareas-sin-login.png</div>'">
-        <figcaption><strong>3. /tareas sin sesión</strong> – respuesta 401</figcaption>
-      </figure>
+          <figure>
+            <img
+              src="capturas/04-login-incorrecto.png"
+              alt="Login incorrecto"
+              onerror="
+                this.outerHTML =
+                  '<div class=missing>Falta capturas/04-login-incorrecto.png</div>'
+              "
+            />
+            <figcaption>
+              <strong>4. Login con contraseña incorrecta</strong> – respuesta
+              401
+            </figcaption>
+          </figure>
 
-      <figure>
-        <img src="capturas/04-login-incorrecto.png" alt="Login incorrecto" onerror="this.outerHTML='<div class=missing>Falta capturas/04-login-incorrecto.png</div>'">
-        <figcaption><strong>4. Login con contraseña incorrecta</strong> – respuesta 401</figcaption>
-      </figure>
+          <figure>
+            <img
+              src="capturas/05-login-correcto.png"
+              alt="Login correcto"
+              onerror="
+                this.outerHTML =
+                  '<div class=missing>Falta capturas/05-login-correcto.png</div>'
+              "
+            />
+            <figcaption>
+              <strong>5. Login correcto</strong> – respuesta 200
+            </figcaption>
+          </figure>
 
-      <figure>
-        <img src="capturas/05-login-correcto.png" alt="Login correcto" onerror="this.outerHTML='<div class=missing>Falta capturas/05-login-correcto.png</div>'">
-        <figcaption><strong>5. Login correcto</strong> – respuesta 200</figcaption>
-      </figure>
+          <figure>
+            <img
+              src="capturas/06-tareas.png"
+              alt="Pantalla de bienvenida"
+              onerror="
+                this.outerHTML =
+                  '<div class=missing>Falta capturas/06-tareas.png</div>'
+              "
+            />
+            <figcaption>
+              <strong>6. /tareas con sesión</strong> – HTML de bienvenida
+            </figcaption>
+          </figure>
 
-      <figure>
-        <img src="capturas/06-tareas.png" alt="Pantalla de bienvenida" onerror="this.outerHTML='<div class=missing>Falta capturas/06-tareas.png</div>'">
-        <figcaption><strong>6. /tareas con sesión</strong> – HTML de bienvenida</figcaption>
-      </figure>
+          <figure>
+            <img
+              src="capturas/07-base-datos.png"
+              alt="Tabla usuarios en SQLite"
+              onerror="
+                this.outerHTML =
+                  '<div class=missing>Falta capturas/07-base-datos.png</div>'
+              "
+            />
+            <figcaption>
+              <strong>7. Base de datos</strong> – contraseñas hasheadas
+            </figcaption>
+          </figure>
+        </div>
+      </section>
 
-      <figure>
-        <img src="capturas/07-base-datos.png" alt="Tabla usuarios en SQLite" onerror="this.outerHTML='<div class=missing>Falta capturas/07-base-datos.png</div>'">
-        <figcaption><strong>7. Base de datos</strong> – contraseñas hasheadas</figcaption>
-      </figure>
+      <section id="conceptos">
+        <h2>Respuestas conceptuales</h2>
 
+        <h3>¿Por qué hashear contraseñas?</h3>
+        <ul>
+          <li>
+            <strong>No se guardan secretos en texto plano:</strong> si la base
+            se filtra, el atacante solo obtiene hashes.
+          </li>
+          <li>
+            <strong>Es una función de una sola vía:</strong> no se puede
+            revertir; para validar se hashea lo ingresado y se compara.
+          </li>
+          <li>
+            <strong>Protege a quienes reutilizan contraseñas</strong> en otros
+            sitios.
+          </li>
+          <li>
+            <strong>Salt:</strong> cada hash incluye un valor aleatorio, así dos
+            usuarios con la misma clave tienen hashes distintos y se evitan las
+            <em>rainbow tables</em>.
+          </li>
+          <li>
+            <strong>Costo computacional:</strong> algoritmos como scrypt o
+            PBKDF2 son lentos a propósito, lo que encarece la fuerza bruta.
+          </li>
+          <li>
+            Ni los administradores del sistema pueden ver las contraseñas.
+          </li>
+        </ul>
+
+        <h3>Ventajas de usar SQLite en este proyecto</h3>
+        <ul>
+          <li>
+            <strong>Sin servidor:</strong> es una base embebida, no requiere
+            instalación ni configuración.
+          </li>
+          <li>
+            <strong>Un solo archivo</strong> (<code>tareas.db</code>), fácil de
+            copiar y respaldar.
+          </li>
+          <li>
+            <strong>Incluida en Python</strong> mediante el módulo
+            <code>sqlite3</code>, sin dependencias extra.
+          </li>
+          <li>
+            <strong>Persistencia:</strong> los datos sobreviven al reinicio del
+            servidor.
+          </li>
+          <li>
+            <strong>SQL estándar y transacciones ACID</strong>, con
+            restricciones como <code>UNIQUE</code> para evitar usuarios
+            duplicados.
+          </li>
+          <li>
+            <strong>Ideal para prototipos</strong> y proyectos con pocos
+            usuarios simultáneos.
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>PFO 2 – Sistema de Gestión de Tareas</footer>
+
+    <div
+      class="lightbox"
+      id="lightbox"
+      role="dialog"
+      aria-label="Imagen ampliada"
+    >
+      <button class="close" id="lb-close" aria-label="Cerrar">&times;</button>
+      <button class="nav prev" id="lb-prev" aria-label="Anterior">
+        &#8249;
+      </button>
+      <img id="lb-img" alt="" />
+      <p id="lb-caption"></p>
+      <button class="nav next" id="lb-next" aria-label="Siguiente">
+        &#8250;
+      </button>
     </div>
-  </section>
 
-  <section id="conceptos">
-    <h2>Respuestas conceptuales</h2>
+    <script>
+      (function () {
+        var box = document.getElementById("lightbox");
+        var big = document.getElementById("lb-img");
+        var cap = document.getElementById("lb-caption");
+        var current = -1;
 
-    <h3>¿Por qué hashear contraseñas?</h3>
-    <ul>
-      <li><strong>No se guardan secretos en texto plano:</strong> si la base se filtra, el atacante solo obtiene hashes.</li>
-      <li><strong>Es una función de una sola vía:</strong> no se puede revertir; para validar se hashea lo ingresado y se compara.</li>
-      <li><strong>Protege a quienes reutilizan contraseñas</strong> en otros sitios.</li>
-      <li><strong>Salt:</strong> cada hash incluye un valor aleatorio, así dos usuarios con la misma clave tienen hashes distintos y se evitan las <em>rainbow tables</em>.</li>
-      <li><strong>Costo computacional:</strong> algoritmos como scrypt o PBKDF2 son lentos a propósito, lo que encarece la fuerza bruta.</li>
-      <li>Ni los administradores del sistema pueden ver las contraseñas.</li>
-    </ul>
+        function imgs() {
+          return Array.prototype.slice.call(
+            document.querySelectorAll("figure img"),
+          );
+        }
+        function show(i) {
+          var list = imgs();
+          if (!list.length) return;
+          current = (i + list.length) % list.length;
+          var img = list[current];
+          big.src = img.src;
+          big.alt = img.alt;
+          var fc = img.parentNode.querySelector("figcaption");
+          cap.textContent = fc ? fc.textContent : img.alt;
+          box.classList.add("open");
+          document.body.style.overflow = "hidden";
+        }
+        function hide() {
+          box.classList.remove("open");
+          document.body.style.overflow = "";
+        }
 
-    <h3>Ventajas de usar SQLite en este proyecto</h3>
-    <ul>
-      <li><strong>Sin servidor:</strong> es una base embebida, no requiere instalación ni configuración.</li>
-      <li><strong>Un solo archivo</strong> (<code>tareas.db</code>), fácil de copiar y respaldar.</li>
-      <li><strong>Incluida en Python</strong> mediante el módulo <code>sqlite3</code>, sin dependencias extra.</li>
-      <li><strong>Persistencia:</strong> los datos sobreviven al reinicio del servidor.</li>
-      <li><strong>SQL estándar y transacciones ACID</strong>, con restricciones como <code>UNIQUE</code> para evitar usuarios duplicados.</li>
-      <li><strong>Ideal para prototipos</strong> y proyectos con pocos usuarios simultáneos.</li>
-    </ul>
-  </section>
-
-</main>
-
-<footer>PFO 2 – Sistema de Gestión de Tareas</footer>
-
-<div class="lightbox" id="lightbox" role="dialog" aria-label="Imagen ampliada">
-  <button class="close" id="lb-close" aria-label="Cerrar">&times;</button>
-  <button class="nav prev" id="lb-prev" aria-label="Anterior">&#8249;</button>
-  <img id="lb-img" alt="">
-  <p id="lb-caption"></p>
-  <button class="nav next" id="lb-next" aria-label="Siguiente">&#8250;</button>
-</div>
-
-<script>
-  (function () {
-    var box = document.getElementById('lightbox');
-    var big = document.getElementById('lb-img');
-    var cap = document.getElementById('lb-caption');
-    var current = -1;
-
-    function imgs() {
-      return Array.prototype.slice.call(document.querySelectorAll('figure img'));
-    }
-    function show(i) {
-      var list = imgs();
-      if (!list.length) return;
-      current = (i + list.length) % list.length;
-      var img = list[current];
-      big.src = img.src;
-      big.alt = img.alt;
-      var fc = img.parentNode.querySelector('figcaption');
-      cap.textContent = fc ? fc.textContent : img.alt;
-      box.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    }
-    function hide() {
-      box.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-
-    document.addEventListener('click', function (e) {
-      var t = e.target;
-      if (t.matches && t.matches('figure img')) {
-        show(imgs().indexOf(t));
-      }
-    });
-    document.getElementById('lb-close').addEventListener('click', function (e) { e.stopPropagation(); hide(); });
-    document.getElementById('lb-prev').addEventListener('click', function (e) { e.stopPropagation(); show(current - 1); });
-    document.getElementById('lb-next').addEventListener('click', function (e) { e.stopPropagation(); show(current + 1); });
-    box.addEventListener('click', function (e) { if (e.target !== big) hide(); });
-    document.addEventListener('keydown', function (e) {
-      if (!box.classList.contains('open')) return;
-      if (e.key === 'Escape') hide();
-      if (e.key === 'ArrowLeft') show(current - 1);
-      if (e.key === 'ArrowRight') show(current + 1);
-    });
-  })();
-</script>
-
-</body>
+        document.addEventListener("click", function (e) {
+          var t = e.target;
+          if (t.matches && t.matches("figure img")) {
+            show(imgs().indexOf(t));
+          }
+        });
+        document
+          .getElementById("lb-close")
+          .addEventListener("click", function (e) {
+            e.stopPropagation();
+            hide();
+          });
+        document
+          .getElementById("lb-prev")
+          .addEventListener("click", function (e) {
+            e.stopPropagation();
+            show(current - 1);
+          });
+        document
+          .getElementById("lb-next")
+          .addEventListener("click", function (e) {
+            e.stopPropagation();
+            show(current + 1);
+          });
+        box.addEventListener("click", function (e) {
+          if (e.target !== big) hide();
+        });
+        document.addEventListener("keydown", function (e) {
+          if (!box.classList.contains("open")) return;
+          if (e.key === "Escape") hide();
+          if (e.key === "ArrowLeft") show(current - 1);
+          if (e.key === "ArrowRight") show(current + 1);
+        });
+      })();
+    </script>
+  </body>
 </html>
